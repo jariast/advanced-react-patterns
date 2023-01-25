@@ -8,9 +8,15 @@ function useToggle() {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
-  const getTogglerProps = props => {
-    const togglerProps = {'aria-pressed': on, onClick: toggle}
-    return {...togglerProps, ...props}
+  const getTogglerProps = ({onClick, ...props}) => {
+    return {
+      'aria-pressed': on,
+      ...props,
+      onClick: () => {
+        onClick?.() //Don't try to call onClick if it's not passed as argument
+        toggle()
+      },
+    }
   }
 
   return {on, toggle, getTogglerProps}
