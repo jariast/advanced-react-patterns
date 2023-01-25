@@ -9,7 +9,6 @@ const ToggleContext = React.createContext()
 function Toggle({children}) {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
-  const value = [on, toggle]
 
   return (
     <ToggleContext.Provider value={{on, toggle}}>
