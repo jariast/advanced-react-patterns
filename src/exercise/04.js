@@ -9,7 +9,7 @@ function useToggle() {
   const toggle = () => setOn(!on)
 
   const togglerProps = {'aria-pressed': on, onClick: toggle}
-  return {on, togglerProps}
+  return {on, toggle, togglerProps}
 }
 
 function App() {
