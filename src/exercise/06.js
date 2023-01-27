@@ -38,6 +38,7 @@ function useToggle({
 } = {}) {
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
+  console.log('State', state)
 
   // Gotta be careful with this comparison, !== is not the same as !=
   // This is specially troublesome because I'm using Font Ligatures
@@ -45,10 +46,27 @@ function useToggle({
   const hasOnChange = !!onChange
 
   const on = onIscontrolled ? controlledOn : state.on
+  console.log('ON: ', on)
+  const {current: wasControlled} = React.useRef(onIscontrolled)
+  console.log('Is Controlled? ', onIscontrolled)
 
   React.useEffect(() => {
-    warning(!(!hasOnChange && onIscontrolled && !readOnly), 'Error')
+    warning(
+      !(!hasOnChange && onIscontrolled && !readOnly),
+      `An \`on\` prop was provided to useToggle without an \`onChange\` handler. This will render a read-only toggle. If you want it to be mutable, use \`initialOn\`. Otherwise, set either \`onChange\` or \`readOnly\`.`,
+    )
   }, [hasOnChange, onIscontrolled, readOnly])
+
+  React.useEffect(() => {
+    warning(
+      !(wasControlled && !onIscontrolled),
+      'From Controlled to Uncontrolled',
+    )
+    warning(
+      !(!wasControlled && onIscontrolled),
+      'From UnControlled to Controlled',
+    )
+  }, [onIscontrolled, wasControlled])
 
   const dispatchWithOnChange = action => {
     if (!onIscontrolled) {
@@ -102,6 +120,8 @@ function App() {
   const [bothOn, setBothOn] = React.useState(false)
   const [timesClicked, setTimesClicked] = React.useState(0)
 
+  const [test, setTest] = React.useState() // This is just for testing the warning on Uncontrolled to Controlled
+
   function handleToggleChange(state, action) {
     if (action.type === actionTypes.toggle && timesClicked > 4) {
       return
@@ -111,18 +131,14 @@ function App() {
   }
 
   function handleResetClick() {
-    setBothOn(false)
+    setBothOn()
     setTimesClicked(0)
   }
 
   return (
     <div>
       <div>
-        <Toggle
-          on={bothOn}
-          readOnly
-          // onChange={handleToggleChange}
-        />
+        <Toggle on={bothOn} onChange={handleToggleChange} />
         <Toggle on={bothOn} onChange={handleToggleChange} />
       </div>
       {timesClicked > 4 ? (
@@ -138,9 +154,11 @@ function App() {
       <div>
         <div>Uncontrolled Toggle:</div>
         <Toggle
-          onChange={(...args) =>
+          on={test}
+          onChange={(...args) => {
             console.info('Uncontrolled Toggle onChange', ...args)
-          }
+            setTest(true)
+          }}
         />
       </div>
     </div>
