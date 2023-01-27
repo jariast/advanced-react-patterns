@@ -3,6 +3,7 @@
 
 import * as React from 'react'
 import {Switch} from '../switch'
+import warning from 'warning'
 
 const callAll =
   (...fns) =>
@@ -33,6 +34,7 @@ function useToggle({
   reducer = toggleReducer,
   onChange,
   on: controlledOn,
+  readOnly = false,
 } = {}) {
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
@@ -40,14 +42,13 @@ function useToggle({
   // Gotta be careful with this comparison, !== is not the same as !=
   // This is specially troublesome because I'm using Font Ligatures
   const onIscontrolled = controlledOn != null
+  const hasOnChange = !!onChange
 
   const on = onIscontrolled ? controlledOn : state.on
 
-  if (!onChange && onIscontrolled) {
-    console.error(
-      'You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.',
-    )
-  }
+  React.useEffect(() => {
+    warning(!(!hasOnChange && onIscontrolled && !readOnly), 'Error')
+  }, [hasOnChange, onIscontrolled, readOnly])
 
   const dispatchWithOnChange = action => {
     if (!onIscontrolled) {
@@ -85,12 +86,13 @@ function useToggle({
   }
 }
 
-function Toggle({on: controlledOn, onChange, initialOn, reducer}) {
+function Toggle({on: controlledOn, onChange, initialOn, reducer, readOnly}) {
   const {on, getTogglerProps} = useToggle({
     on: controlledOn,
     onChange,
     initialOn,
     reducer,
+    readOnly,
   })
   const props = getTogglerProps({on})
   return <Switch {...props} />
@@ -118,7 +120,7 @@ function App() {
       <div>
         <Toggle
           on={bothOn}
-
+          readOnly
           // onChange={handleToggleChange}
         />
         <Toggle on={bothOn} onChange={handleToggleChange} />
