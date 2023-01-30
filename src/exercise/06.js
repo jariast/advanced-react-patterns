@@ -29,26 +29,8 @@ function toggleReducer(state, {type, initialState}) {
   }
 }
 
-function useToggle({
-  initialOn = false,
-  reducer = toggleReducer,
-  onChange,
-  on: controlledOn,
-  readOnly = false,
-} = {}) {
-  const {current: initialState} = React.useRef({on: initialOn})
-  const [state, dispatch] = React.useReducer(reducer, initialState)
-  console.log('State', state)
-
-  // Gotta be careful with this comparison, !== is not the same as !=
-  // This is specially troublesome because I'm using Font Ligatures
-  const onIscontrolled = controlledOn != null
-  const hasOnChange = !!onChange
-
-  const on = onIscontrolled ? controlledOn : state.on
-  console.log('ON: ', on)
+const useControlledWarning = (onIscontrolled, hasOnChange, readOnly) => {
   const {current: wasControlled} = React.useRef(onIscontrolled)
-  console.log('Is Controlled? ', onIscontrolled)
 
   React.useEffect(() => {
     warning(
@@ -67,6 +49,25 @@ function useToggle({
       'From UnControlled to Controlled',
     )
   }, [onIscontrolled, wasControlled])
+}
+
+function useToggle({
+  initialOn = false,
+  reducer = toggleReducer,
+  onChange,
+  on: controlledOn,
+  readOnly = false,
+} = {}) {
+  const {current: initialState} = React.useRef({on: initialOn})
+  const [state, dispatch] = React.useReducer(reducer, initialState)
+
+  // Gotta be careful with this comparison, !== is not the same as !=
+  // This is specially troublesome because I'm using Font Ligatures
+  const onIscontrolled = controlledOn != null
+  const hasOnChange = !!onChange
+  const on = onIscontrolled ? controlledOn : state.on
+
+  useControlledWarning(onIscontrolled, hasOnChange, readOnly)
 
   const dispatchWithOnChange = action => {
     if (!onIscontrolled) {
