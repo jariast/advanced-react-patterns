@@ -2,6 +2,7 @@
 // http://localhost:3000/isolated/exercise/06.js
 
 import * as React from 'react'
+import warning from 'warning'
 import {Switch} from '../switch'
 
 const callAll =
@@ -40,6 +41,9 @@ function useToggle({
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
 
+  // const shouldNotWarnReadOnly = !!controlledOn && !!onChange
+  // const shouldNotWarnReadOnly = controlledOn && !!onChange
+
   const onIsControlled = controlledOn != null
   // 🐨 determine whether on is controlled and assign that to `onIsControlled`
   // 💰 `controlledOn != null`
@@ -48,6 +52,17 @@ function useToggle({
   // `onIsControlled`, otherwise, it should be `state.on`.
   // const {on} = state
   const on = onIsControlled ? controlledOn : state.on
+
+  //Extra 01
+  if (onIsControlled) {
+    const shouldNotWarnReadOnly = !!onChange
+
+    warning(
+      shouldNotWarnReadOnly,
+      'Failed prop type: You provided a `on` prop without an `onChange handler` ',
+    )
+  }
+  // const shouldNotWarnReadOnly = onIsControlled || !!onChange
 
   // We want to call `onChange` any time we need to make a state change, but we
   // only want to call `dispatch` if `!onIsControlled` (otherwise we could get
@@ -145,6 +160,8 @@ function App() {
     <div>
       <div>
         <Toggle on={bothOn} onChange={handleToggleChange} />
+        {/*Extra 01*/}
+        <Toggle on={bothOn} />
         <Toggle on={bothOn} onChange={handleToggleChange} />
       </div>
       {timesClicked > 4 ? (
