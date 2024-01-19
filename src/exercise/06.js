@@ -39,12 +39,11 @@ function useToggle({
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
 
-  // const shouldNotWarnReadOnly = !!controlledOn && !!onChange
-  // const shouldNotWarnReadOnly = controlledOn && !!onChange
-
   const onIsControlled = controlledOn != null
   const on = onIsControlled ? controlledOn : state.on
   const hasOnChangeFunction = !!onChange
+
+  const isInitiallyControlled = React.useRef(onIsControlled)
 
   //Extra 01 Before Watching solution
   // if (onIsControlled) {
@@ -67,6 +66,25 @@ function useToggle({
       'Passed on without an onChange function, set readOnly to avoid this warning',
     )
   }, [onIsControlled, hasOnChangeFunction, readOnly])
+
+  // Extra 02 Before watching solution
+  React.useEffect(() => {
+    const switchedMode = isInitiallyControlled.current !== onIsControlled
+
+    const shouldWarnUncontrolledToControlled =
+      switchedMode && !isInitiallyControlled.current
+    warning(
+      !shouldWarnUncontrolledToControlled,
+      'Going from Uncontrolled to Controlled',
+    )
+
+    const shouldWarnControlledToUncontrolled =
+      switchedMode && isInitiallyControlled.current
+    warning(
+      !shouldWarnControlledToUncontrolled,
+      'Going from Controlled to Uncontrolled',
+    )
+  }, [onIsControlled])
 
   // We want to call `onChange` any time we need to make a state change, but we
   // only want to call `dispatch` if `!onIsControlled` (otherwise we could get
@@ -127,7 +145,12 @@ function Toggle({on: controlledOn, onChange, initialOn, reducer, readOnly}) {
 }
 
 function App() {
-  const [bothOn, setBothOn] = React.useState(false)
+  // const [bothOn, setBothOn] = React.useState(false)
+
+  // Extra 02
+  const [bothOn, setBothOn] = React.useState()
+  const [testOn, setTestOn] = React.useState(true)
+
   const [timesClicked, setTimesClicked] = React.useState(0)
 
   function handleToggleChange(state, action) {
@@ -146,11 +169,17 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} onChange={handleToggleChange} />
+        {/* <Toggle on={bothOn} onChange={handleToggleChange} /> */}
+
         {/*Extra 01*/}
-        <Toggle on={bothOn} readOnly={true} />
-        <Toggle on={bothOn} />
+        {/* <Toggle on={bothOn} readOnly={true} /> */}
+        {/* <Toggle on={bothOn} /> */}
+
+        {/*Extra 02*/}
         <Toggle on={bothOn} onChange={handleToggleChange} />
+        <Toggle on={testOn} onChange={() => setTestOn()} />
+
+        {/* <Toggle on={bothOn} onChange={handleToggleChange} /> */}
       </div>
       {timesClicked > 4 ? (
         <div data-testid="notice">
