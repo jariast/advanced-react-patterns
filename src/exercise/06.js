@@ -16,22 +16,21 @@ const actionTypes = {
 }
 
 // Extra 03
-function useControlledSwitchWarning(onIsControlled, onChange, readOnly) {
-  const isInitiallyControlled = React.useRef(onIsControlled)
+function useControlledSwitchWarning(isControlled, onChange, readOnly) {
+  const isInitiallyControlled = React.useRef(isControlled)
   const hasOnChangeFunction = !!onChange
 
   React.useEffect(() => {
-    const shouldWarnReadOnly =
-      onIsControlled && !hasOnChangeFunction && !readOnly
+    const shouldWarnReadOnly = isControlled && !hasOnChangeFunction && !readOnly
 
     warning(
       !shouldWarnReadOnly,
       'Passed on without an onChange function, set readOnly to avoid this warning',
     )
-  }, [onIsControlled, hasOnChangeFunction, readOnly])
+  }, [isControlled, hasOnChangeFunction, readOnly])
 
   React.useEffect(() => {
-    const switchedMode = isInitiallyControlled.current !== onIsControlled
+    const switchedMode = isInitiallyControlled.current !== isControlled
 
     const shouldWarnUncontrolledToControlled =
       switchedMode && !isInitiallyControlled.current
@@ -46,7 +45,7 @@ function useControlledSwitchWarning(onIsControlled, onChange, readOnly) {
       !shouldWarnControlledToUncontrolled,
       'Going from Controlled to Uncontrolled',
     )
-  }, [onIsControlled])
+  }, [isControlled])
 }
 
 function toggleReducer(state, {type, initialState}) {
