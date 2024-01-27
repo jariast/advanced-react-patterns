@@ -15,6 +15,40 @@ const actionTypes = {
   reset: 'reset',
 }
 
+// Extra 03
+function useControlledSwitchWarning(onIsControlled, onChange, readOnly) {
+  const isInitiallyControlled = React.useRef(onIsControlled)
+  const hasOnChangeFunction = !!onChange
+
+  React.useEffect(() => {
+    const shouldWarnReadOnly =
+      onIsControlled && !hasOnChangeFunction && !readOnly
+
+    warning(
+      !shouldWarnReadOnly,
+      'Passed on without an onChange function, set readOnly to avoid this warning',
+    )
+  }, [onIsControlled, hasOnChangeFunction, readOnly])
+
+  React.useEffect(() => {
+    const switchedMode = isInitiallyControlled.current !== onIsControlled
+
+    const shouldWarnUncontrolledToControlled =
+      switchedMode && !isInitiallyControlled.current
+    warning(
+      !shouldWarnUncontrolledToControlled,
+      'Going from Uncontrolled to Controlled',
+    )
+
+    const shouldWarnControlledToUncontrolled =
+      switchedMode && isInitiallyControlled.current
+    warning(
+      !shouldWarnControlledToUncontrolled,
+      'Going from Controlled to Uncontrolled',
+    )
+  }, [onIsControlled])
+}
+
 function toggleReducer(state, {type, initialState}) {
   switch (type) {
     case actionTypes.toggle: {
@@ -41,59 +75,8 @@ function useToggle({
 
   const onIsControlled = controlledOn != null
   const on = onIsControlled ? controlledOn : state.on
-  const hasOnChangeFunction = !!onChange
+  useControlledSwitchWarning(onIsControlled, onChange, readOnly)
 
-  const isInitiallyControlled = React.useRef(onIsControlled)
-
-  //Extra 01 Before Watching solution
-  // if (onIsControlled) {
-  //   const shouldNotWarnReadOnly = !!onChange
-  //
-  //   warning(
-  //     shouldNotWarnReadOnly,
-  //     'Failed prop type: You provided a `on` prop without an `onChange handler` ',
-  //   )
-  // }
-  // const shouldNotWarnReadOnly = onIsControlled || !!onChange
-
-  // Extra 01 After watching solution
-  React.useEffect(() => {
-    const shouldWarnReadOnly =
-      onIsControlled && !hasOnChangeFunction && !readOnly
-
-    warning(
-      !shouldWarnReadOnly,
-      'Passed on without an onChange function, set readOnly to avoid this warning',
-    )
-  }, [onIsControlled, hasOnChangeFunction, readOnly])
-
-  // Extra 02 Before watching solution
-  React.useEffect(() => {
-    const switchedMode = isInitiallyControlled.current !== onIsControlled
-
-    const shouldWarnUncontrolledToControlled =
-      switchedMode && !isInitiallyControlled.current
-    warning(
-      !shouldWarnUncontrolledToControlled,
-      'Going from Uncontrolled to Controlled',
-    )
-
-    const shouldWarnControlledToUncontrolled =
-      switchedMode && isInitiallyControlled.current
-    warning(
-      !shouldWarnControlledToUncontrolled,
-      'Going from Controlled to Uncontrolled',
-    )
-  }, [onIsControlled])
-
-  // We want to call `onChange` any time we need to make a state change, but we
-  // only want to call `dispatch` if `!onIsControlled` (otherwise we could get
-  // unnecessary renders).
-  // 🐨 To simplify things a bit, let's make a `dispatchWithOnChange` function
-  // right here. This will:
-  // 1. accept an action
-  // 2. if onIsControlled is false, call dispatch with that action
-  // 3. Then call `onChange` with our "suggested changes" and the action.
   const dispatchWithOnChange = action => {
     if (!onIsControlled) {
       dispatch(action)
